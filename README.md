@@ -8,10 +8,13 @@ you can study the serving architecture before installing GPU-heavy dependencies.
 
 | File | Chapter | Focus | Runs without ML dependencies |
 | --- | --- | --- | --- |
-| `llm_serving_examples.py` | Chapter 2 | LLM inference internals: tokenizer, model config, attention, manual decode, KV cache, vLLM basics | Only `setup` and `vllm-config` |
-| `model_serving_system_design.py` | Chapter 3 | Single-model serving, batching, streaming, multi-model LRU, Triton/vLLM wrappers | Yes, with `--backend mock` |
-| `model_serving_best_practices.py` | Chapter 4 | Knowledge Agent, RAG vs CAG, enterprise API, routing, metrics, build-vs-cloud decisions | Yes |
-| `llm_optimization_practice.py` | Chapter 9 | Optimization lab: hardware inspection, synthetic traffic, vLLM commands, benchmark simulation, quantization, distributed serving trade-offs | Yes |
+| `ch2_llm_serving_examples.py` | Chapter 2 | LLM inference internals: tokenizer, model config, attention, manual decode, KV cache, vLLM basics | Only `setup` and `vllm-config` |
+| `ch2_results.md` | Chapter 2 | Recorded command outputs and explanations | Yes |
+| `ch3_model_serving_system_design.py` | Chapter 3 | Single-model serving, batching, streaming, multi-model LRU, Triton/vLLM wrappers | Yes, with `--backend mock` |
+| `ch4_model_serving_best_practices_hw.py` | Chapter 4 | Knowledge Agent, RAG vs CAG, enterprise API, routing, metrics, build-vs-cloud decisions | Yes |
+| `ch6_vllm_optimization_techniques_hw.py` | Chapter 6 | vLLM optimization techniques: batching, chunked prefill, attention, PagedAttention, quantization, prefix caching | Yes |
+| `ch6_results.md` | Chapter 6 | Recorded comparison results and explanations | Yes |
+| `ch9_llm_optimization_practice_hw.py` | Chapter 9 | Optimization lab: hardware inspection, synthetic traffic, vLLM commands, benchmark simulation, quantization, distributed serving trade-offs | Yes |
 
 ## Quick Start
 
@@ -19,10 +22,11 @@ From the repository root:
 
 ```bash
 cd examples
-python3 -B llm_serving_examples.py
-python3 -B model_serving_system_design.py --section basic
-python3 -B model_serving_best_practices.py --section agent
-python3 -B llm_optimization_practice.py --section benchmark
+python3 -B ch2_llm_serving_examples.py
+python3 -B ch3_model_serving_system_design.py --section basic
+python3 -B ch4_model_serving_best_practices_hw.py --section agent
+python3 -B ch6_vllm_optimization_techniques_hw.py --section batching
+python3 -B ch9_llm_optimization_practice_hw.py --section benchmark
 ```
 
 The `-B` flag prevents Python from creating `__pycache__` files while you are
@@ -52,29 +56,29 @@ Notes:
 Show setup instructions:
 
 ```bash
-python3 -B llm_serving_examples.py
+python3 -B ch2_llm_serving_examples.py
 ```
 
 Run sections that require Hugging Face dependencies:
 
 ```bash
-python3 -B llm_serving_examples.py --section tokenizer
-python3 -B llm_serving_examples.py --section config
-python3 -B llm_serving_examples.py --section decoder
-python3 -B llm_serving_examples.py --section attention
-python3 -B llm_serving_examples.py --section pipeline
-python3 -B llm_serving_examples.py --section manual-no-cache --max-new-tokens 20
-python3 -B llm_serving_examples.py --section manual-kv-cache --max-new-tokens 20
-python3 -B llm_serving_examples.py --section compare-manual --max-new-tokens 20
+python3 -B ch2_llm_serving_examples.py --section tokenizer
+python3 -B ch2_llm_serving_examples.py --section config
+python3 -B ch2_llm_serving_examples.py --section decoder
+python3 -B ch2_llm_serving_examples.py --section attention
+python3 -B ch2_llm_serving_examples.py --section pipeline
+python3 -B ch2_llm_serving_examples.py --section manual-no-cache --max-new-tokens 20
+python3 -B ch2_llm_serving_examples.py --section manual-kv-cache --max-new-tokens 20
+python3 -B ch2_llm_serving_examples.py --section compare-manual --max-new-tokens 20
 ```
 
 Run vLLM-related examples:
 
 ```bash
-python3 -B llm_serving_examples.py --section vllm-config
-python3 -B llm_serving_examples.py --section vllm-basic
-python3 -B llm_serving_examples.py --section vllm-batch
-python3 -B llm_serving_examples.py --section vllm-stream
+python3 -B ch2_llm_serving_examples.py --section vllm-config
+python3 -B ch2_llm_serving_examples.py --section vllm-basic
+python3 -B ch2_llm_serving_examples.py --section vllm-batch
+python3 -B ch2_llm_serving_examples.py --section vllm-stream
 ```
 
 ### Chapter 2 Section Map
@@ -98,12 +102,12 @@ python3 -B llm_serving_examples.py --section vllm-stream
 Sample output:
 
 ```text
-$ python3 -B llm_serving_examples.py
+$ python3 -B ch2_llm_serving_examples.py
 Chapter 2 LLM serving examples
 Install the Hugging Face examples:
     pip install torch transformers accelerate matplotlib
 
-$ python3 -B llm_serving_examples.py --section vllm-config
+$ python3 -B ch2_llm_serving_examples.py --section vllm-config
 from vllm import LLM, SamplingParams
 model = LLM(
     model="Qwen/Qwen2.5-7B",
@@ -116,25 +120,25 @@ model = LLM(
 Run local mock demos:
 
 ```bash
-python3 -B model_serving_system_design.py --section basic
-python3 -B model_serving_system_design.py --section batch
-python3 -B model_serving_system_design.py --section stream
-python3 -B model_serving_system_design.py --section multimodel
-python3 -B model_serving_system_design.py --section triton
+python3 -B ch3_model_serving_system_design.py --section basic
+python3 -B ch3_model_serving_system_design.py --section batch
+python3 -B ch3_model_serving_system_design.py --section stream
+python3 -B ch3_model_serving_system_design.py --section multimodel
+python3 -B ch3_model_serving_system_design.py --section triton
 ```
 
 Run with a real Hugging Face backend:
 
 ```bash
-python3 -B model_serving_system_design.py --section basic --backend transformers
-python3 -B model_serving_system_design.py --section batch --backend transformers
+python3 -B ch3_model_serving_system_design.py --section basic --backend transformers
+python3 -B ch3_model_serving_system_design.py --section batch --backend transformers
 ```
 
 Start FastAPI demos:
 
 ```bash
-python3 -B model_serving_system_design.py --serve --port 8000
-python3 -B model_serving_system_design.py --multi-serve --port 8001
+python3 -B ch3_model_serving_system_design.py --serve --port 8000
+python3 -B ch3_model_serving_system_design.py --multi-serve --port 8001
 ```
 
 ### Chapter 3 Section Map
@@ -153,10 +157,10 @@ python3 -B model_serving_system_design.py --multi-serve --port 8001
 Sample output:
 
 ```text
-$ python3 -B model_serving_system_design.py --section basic
+$ python3 -B ch3_model_serving_system_design.py --section basic
 Hello, I am a compact model serving demo.
 
-$ python3 -B model_serving_system_design.py --section stream
+$ python3 -B ch3_model_serving_system_design.py --section stream
 data: {"token": " a", "sequence_id": "..."}
 data: {"token": " compact", "sequence_id": "..."}
 ...
@@ -167,20 +171,20 @@ data: {"token": " compact", "sequence_id": "..."}
 Run local homework sections:
 
 ```bash
-python3 -B model_serving_best_practices.py --section agent
-python3 -B model_serving_best_practices.py --section rag --chunk-words 25
-python3 -B model_serving_best_practices.py --section cag
-python3 -B model_serving_best_practices.py --section routing
-python3 -B model_serving_best_practices.py --section enterprise
-python3 -B model_serving_best_practices.py --section metrics
-python3 -B model_serving_best_practices.py --section metrics --burst
-python3 -B model_serving_best_practices.py --section decision
+python3 -B ch4_model_serving_best_practices_hw.py --section agent
+python3 -B ch4_model_serving_best_practices_hw.py --section rag --chunk-words 25
+python3 -B ch4_model_serving_best_practices_hw.py --section cag
+python3 -B ch4_model_serving_best_practices_hw.py --section routing
+python3 -B ch4_model_serving_best_practices_hw.py --section enterprise
+python3 -B ch4_model_serving_best_practices_hw.py --section metrics
+python3 -B ch4_model_serving_best_practices_hw.py --section metrics --burst
+python3 -B ch4_model_serving_best_practices_hw.py --section decision
 ```
 
 Start the enterprise-style FastAPI API:
 
 ```bash
-python3 -B model_serving_best_practices.py --serve --port 8000
+python3 -B ch4_model_serving_best_practices_hw.py --serve --port 8000
 ```
 
 ### Chapter 4 Section Map
@@ -199,7 +203,7 @@ python3 -B model_serving_best_practices.py --serve --port 8000
 Sample output:
 
 ```json
-$ python3 -B model_serving_best_practices.py --section enterprise
+$ python3 -B ch4_model_serving_best_practices_hw.py --section enterprise
 {
   "tenant": "enterprise",
   "model": "gpt-4o-mini",
@@ -209,27 +213,87 @@ $ python3 -B model_serving_best_practices.py --section enterprise
 }
 ```
 
+## Chapter 6: Essential LLM Optimization Techniques
+
+Run local vLLM optimization homework sections:
+
+```bash
+python3 -B ch6_vllm_optimization_techniques_hw.py --section commands
+python3 -B ch6_vllm_optimization_techniques_hw.py --section experiment-plan
+python3 -B ch6_vllm_optimization_techniques_hw.py --section batching
+python3 -B ch6_vllm_optimization_techniques_hw.py --section chunked-prefill
+python3 -B ch6_vllm_optimization_techniques_hw.py --section attention
+python3 -B ch6_vllm_optimization_techniques_hw.py --section paged-attention
+python3 -B ch6_vllm_optimization_techniques_hw.py --section quantization
+python3 -B ch6_vllm_optimization_techniques_hw.py --section prefix-cache
+python3 -B ch6_vllm_optimization_techniques_hw.py --section all
+```
+
+### Chapter 6 Section Map
+
+| Section | Chapter concept | Requires | Expected output shape |
+| --- | --- | --- | --- |
+| `commands` | vLLM flags for batching, chunked prefill, prefix caching, attention backend, AWQ/GPTQ/FP8 | Base Python | Copyable `vllm serve` and `vllm bench serve` commands |
+| `experiment-plan` | Chapter 6 optimization experiment matrix | Base Python | Experiment-to-concept mapping, synthetic sweeps, and copyable vLLM commands |
+| `batching` | Dynamic batching vs continuous batching | Base Python | TPS, TTFT, ITL, E2E comparison |
+| `chunked-prefill` | Continuous batching with chunked prefill | Base Python | Comparison plus TTFT/ITL trade-off explanation |
+| `attention` | MHA vs GQA vs MQA KV-cache memory | Base Python | KV-cache GiB and memory reduction ratios |
+| `paged-attention` | PagedAttention and KV-cache fragmentation | Base Python | Contiguous vs paged token waste percentage |
+| `quantization` | Model compression through lower precision | Base Python | FP32/FP16/INT8/INT4 memory estimate |
+| `prefix-cache` | Prefix caching, prompt formatting, tenant isolation, cache-aware routing | Base Python | Prefix hit demo and serving metrics comparison |
+| `all` | Run all local Chapter 6 examples | Base Python | All section outputs in sequence |
+
+### Chapter 6 Experiment Plan
+
+| 實驗 | 對應 Chapter 6 技術 |
+| --- | --- |
+| 調 `max-num-seqs` | continuous batching |
+| 調 `max-num-batched-tokens` | token-level batching |
+| 開 / 關 chunked prefill | chunked prefill |
+| 原始模型 vs GPTQ / AWQ | quantization |
+| 原始模型 vs FP8 | W8A8 quantization |
+| default attention vs FlashInfer | attention kernel optimization |
+
+Use `experiment-plan` first when designing a real vLLM benchmark run:
+
+```bash
+python3 -B ch6_vllm_optimization_techniques_hw.py --section experiment-plan --num-requests 40
+```
+
+Sample output:
+
+```json
+$ python3 -B ch6_vllm_optimization_techniques_hw.py --section attention
+{
+  "mha_gib": 16.0,
+  "gqa_8kv_heads_gib": 4.0,
+  "mqa_1kv_head_gib": 0.5,
+  "gqa_memory_reduction_vs_mha": 4.0,
+  "mqa_memory_reduction_vs_mha": 32.0
+}
+```
+
 ## Chapter 9: Optimization in Practice
 
 Run local optimization lab sections:
 
 ```bash
-python3 -B llm_optimization_practice.py --section hardware
-python3 -B llm_optimization_practice.py --section dataset --dataset sharegpt
-python3 -B llm_optimization_practice.py --section dataset --dataset prefix
-python3 -B llm_optimization_practice.py --section commands
-python3 -B llm_optimization_practice.py --section parse-log
-python3 -B llm_optimization_practice.py --section benchmark
-python3 -B llm_optimization_practice.py --section quantization
-python3 -B llm_optimization_practice.py --section tuning
-python3 -B llm_optimization_practice.py --section distributed
-python3 -B llm_optimization_practice.py --section recommend --dataset prefix --latency-priority
+python3 -B ch9_llm_optimization_practice_hw.py --section hardware
+python3 -B ch9_llm_optimization_practice_hw.py --section dataset --dataset sharegpt
+python3 -B ch9_llm_optimization_practice_hw.py --section dataset --dataset prefix
+python3 -B ch9_llm_optimization_practice_hw.py --section commands
+python3 -B ch9_llm_optimization_practice_hw.py --section parse-log
+python3 -B ch9_llm_optimization_practice_hw.py --section benchmark
+python3 -B ch9_llm_optimization_practice_hw.py --section quantization
+python3 -B ch9_llm_optimization_practice_hw.py --section tuning
+python3 -B ch9_llm_optimization_practice_hw.py --section distributed
+python3 -B ch9_llm_optimization_practice_hw.py --section recommend --dataset prefix --latency-priority
 ```
 
 Run all Chapter 9 sections:
 
 ```bash
-python3 -B llm_optimization_practice.py --section all
+python3 -B ch9_llm_optimization_practice_hw.py --section all
 ```
 
 ### Chapter 9 Section Map
@@ -250,7 +314,7 @@ python3 -B llm_optimization_practice.py --section all
 Sample output:
 
 ```json
-$ python3 -B llm_optimization_practice.py --section quantization
+$ python3 -B ch9_llm_optimization_practice_hw.py --section quantization
 {
   "baseline": {
     "model_memory_gib": 27.5185,
@@ -272,7 +336,8 @@ $ python3 -B llm_optimization_practice.py --section quantization
 1. Chapter 2 `setup`, then `tokenizer`, `config`, and `manual-kv-cache`.
 2. Chapter 3 `basic`, `batch`, `stream`, and `multimodel`.
 3. Chapter 4 `agent`, `rag`, `cag`, `routing`, and `metrics --burst`.
-4. Chapter 9 `dataset`, `benchmark`, `quantization`, `tuning`, and `distributed`.
+4. Chapter 6 `commands`, `batching`, `attention`, `quantization`, and `prefix-cache`.
+5. Chapter 9 `dataset`, `benchmark`, `quantization`, `tuning`, and `distributed`.
 
 ## Troubleshooting
 
@@ -282,7 +347,7 @@ the error message or run one of the mock/local sections first.
 If a model section is slow on macOS or CPU, reduce generation length:
 
 ```bash
-python3 -B llm_serving_examples.py --section manual-kv-cache --max-new-tokens 5
+python3 -B ch2_llm_serving_examples.py --section manual-kv-cache --max-new-tokens 5
 ```
 
 If a vLLM section fails locally, use the Chapter 9 `commands` section to generate
