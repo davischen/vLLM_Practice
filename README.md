@@ -4,17 +4,40 @@ This folder contains runnable Python homework/lab programs for the book chapters
 Most examples are designed to run locally with deterministic mock backends, so
 you can study the serving architecture before installing GPU-heavy dependencies.
 
+## Source Attribution
+
+These exercises are based on the concepts and examples from
+[Hands-On LLM Serving and Optimization](https://learning.oreilly.com/library/view/hands-on-llm-serving/9798341621480/)
+by [Chi Wang](https://learning.oreilly.com/search/?query=author%3A%22Chi%20Wang%22&sort=relevance&highlight=true)
+and [Peiheng Hu](https://learning.oreilly.com/search/?query=author%3A%22Peiheng%20Hu%22&sort=relevance&highlight=true),
+published by [O'Reilly Media, Inc.](https://learning.oreilly.com/publisher/cde70c0c-24bc-41d1-aab0-8a405063a16e).
+
+The code here is an educational, runnable adaptation of selected chapter ideas:
+it is organized as local Python scripts, Colab notebooks, and result notes for
+hands-on practice.
+
 ## Files
 
 | File | Chapter | Focus | Runs without ML dependencies |
 | --- | --- | --- | --- |
 | `ch2_llm_serving_examples.py` | Chapter 2 | LLM inference internals: tokenizer, model config, attention, manual decode, KV cache, vLLM basics | Only `setup` and `vllm-config` |
+| `ch2_llm_serving_examples.ipynb` | Chapter 2 | Colab notebook version of the Chapter 2 examples | Only `setup` and `vllm-config` before installs |
 | `ch2_results.md` | Chapter 2 | Recorded command outputs and explanations | Yes |
 | `ch3_model_serving_system_design.py` | Chapter 3 | Single-model serving, batching, streaming, multi-model LRU, Triton/vLLM wrappers | Yes, with `--backend mock` |
+| `ch3_model_serving_system_design.ipynb` | Chapter 3 | Colab notebook version of the Chapter 3 examples | Yes, with mock sections |
+| `ch3_results.md` | Chapter 3 | Recorded mock-serving outputs and explanations | Yes |
 | `ch4_model_serving_best_practices_hw.py` | Chapter 4 | Knowledge Agent, RAG vs CAG, enterprise API, routing, metrics, build-vs-cloud decisions | Yes |
+| `ch4_model_serving_best_practices_hw.ipynb` | Chapter 4 | Colab notebook version of the Chapter 4 homework | Yes |
+| `ch4_results.md` | Chapter 4 | Recorded best-practices outputs and explanations | Yes |
 | `ch6_vllm_optimization_techniques_hw.py` | Chapter 6 | vLLM optimization techniques: batching, chunked prefill, attention, PagedAttention, quantization, prefix caching | Yes |
+| `ch6_vllm_optimization_techniques_hw.ipynb` | Chapter 6 | Colab notebook version of the Chapter 6 optimization lab | Yes, synthetic sections |
 | `ch6_results.md` | Chapter 6 | Recorded comparison results and explanations | Yes |
+| `ch8_llm_serving_frameworks_hw.py` | Chapter 8 | LLM serving frameworks with a vLLM Scheduler simulation, architecture walkthrough, and framework-selection matrix | Yes |
+| `ch8_llm_serving_frameworks_hw.ipynb` | Chapter 8 | Colab notebook version of the Chapter 8 serving-framework lab | Yes, synthetic sections |
+| `ch8_results.md` | Chapter 8 | Recorded serving-framework and scheduler outputs with explanations | Yes |
 | `ch9_llm_optimization_practice_hw.py` | Chapter 9 | Optimization lab: hardware inspection, synthetic traffic, vLLM commands, benchmark simulation, quantization, distributed serving trade-offs | Yes |
+| `ch9_llm_optimization_practice_hw.ipynb` | Chapter 9 | Colab notebook version of the Chapter 9 optimization lab | Yes, synthetic sections |
+| `ch9_results.md` | Chapter 9 | Recorded optimization-in-practice outputs and explanations | Yes |
 
 ## Quick Start
 
@@ -26,11 +49,42 @@ python3 -B ch2_llm_serving_examples.py
 python3 -B ch3_model_serving_system_design.py --section basic
 python3 -B ch4_model_serving_best_practices_hw.py --section agent
 python3 -B ch6_vllm_optimization_techniques_hw.py --section batching
+python3 -B ch8_llm_serving_frameworks_hw.py --section scheduler
 python3 -B ch9_llm_optimization_practice_hw.py --section benchmark
 ```
 
 The `-B` flag prevents Python from creating `__pycache__` files while you are
 experimenting.
+
+## Colab Notebooks
+
+Each chapter also has a Colab-friendly `.ipynb` version:
+
+| Notebook | Best first cells to run in Colab |
+| --- | --- |
+| `ch2_llm_serving_examples.ipynb` | `Setup`, then `vLLM config snippet`; install `torch transformers accelerate` before tokenizer/model sections |
+| `ch3_model_serving_system_design.ipynb` | `Basic mock generation`, `Batch mock generation`, `Streaming mock generation` |
+| `ch4_model_serving_best_practices_hw.ipynb` | `Knowledge agent`, `RAG`, `CAG`, `Metrics` |
+| `ch6_vllm_optimization_techniques_hw.ipynb` | `vLLM commands`, `Experiment plan matrix`, `Batching simulation`, `Quantization memory estimate` |
+| `ch8_llm_serving_frameworks_hw.ipynb` | `vLLM Scheduler simulation`, `Scheduler performance comparison`, `Serving framework matrix` |
+| `ch9_llm_optimization_practice_hw.ipynb` | `Hardware inspection`, `Dataset stats`, `Synthetic benchmark`, `Quantization analysis` |
+
+Recommended Colab workflow:
+
+1. Open or upload the notebook in Google Colab.
+2. Run the optional install cell only for the dependencies you need.
+3. Run the `Load Chapter Code` cell once.
+4. Run the example cells at the bottom. They call `main([...])`, which is the
+   notebook equivalent of command-line arguments.
+
+Notes:
+
+- The notebooks disable the original script entrypoint so Colab/Jupyter kernel
+  arguments do not confuse `argparse`.
+- Chapter 2 real model sections may download Hugging Face tokenizer/model files.
+- vLLM usually needs Linux/CUDA. In a normal Colab CPU runtime, use the
+  command-builder and synthetic sections first; run real vLLM benchmarks on a
+  GPU runtime that supports your vLLM installation.
 
 ## Optional Dependencies
 
@@ -50,6 +104,30 @@ Notes:
 - `torch`, `transformers`, and model downloads are needed for real Hugging Face model sections.
 - `vllm` generally expects a Linux/CUDA environment.
 - Chapter 9 can generate real `vllm serve` and `vllm bench serve` commands, but its default benchmark is synthetic and local.
+
+## Environment Variables
+
+For Hugging Face downloads, you can store `HF_TOKEN` in a local `.env` file at
+the repository root:
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env`:
+
+```text
+HF_TOKEN=hf_your_real_token_here
+```
+
+Notes:
+
+- Do not write `export` inside `.env`; use plain `KEY=value`.
+- `.env` is already ignored by `.gitignore`, so your token will not be committed.
+- `ch2_llm_serving_examples.py` and the optional Chapter 3 Transformers backend
+  automatically load `.env` before calling Hugging Face.
+- If you prefer shell environment variables, `export HF_TOKEN=...` still works
+  and takes precedence over `.env`.
 
 ## Chapter 2: LLM Serving Internals
 
@@ -141,6 +219,34 @@ python3 -B ch3_model_serving_system_design.py --serve --port 8000
 python3 -B ch3_model_serving_system_design.py --multi-serve --port 8001
 ```
 
+Test the single-model API from another terminal:
+
+```bash
+curl http://127.0.0.1:8000/
+curl -X POST http://127.0.0.1:8000/basic_generate \
+  -H "content-type: application/json" \
+  -d '{"prompt":"Hello, I am"}'
+curl -X POST http://127.0.0.1:8000/generate \
+  -H "content-type: application/json" \
+  -d '{"prompts":["Hello, I am","The weather is"]}'
+```
+
+Test the multi-model API:
+
+```bash
+curl http://127.0.0.1:8001/
+curl -X POST http://127.0.0.1:8001/predict \
+  -H "content-type: application/json" \
+  -d '{"model_id":"550e8400-e29b-41d4-a716-446655440000","input_data":"great service"}'
+```
+
+Generated FastAPI docs are available at `/docs`, for example:
+
+```text
+http://127.0.0.1:8000/docs
+http://127.0.0.1:8001/docs
+```
+
 ### Chapter 3 Section Map
 
 | Section | Chapter concept | Requires | Expected output shape |
@@ -185,6 +291,23 @@ Start the enterprise-style FastAPI API:
 
 ```bash
 python3 -B ch4_model_serving_best_practices_hw.py --serve --port 8000
+```
+
+Then test it from another terminal:
+
+```bash
+curl http://127.0.0.1:8000/
+curl http://127.0.0.1:8000/health
+curl -X POST http://127.0.0.1:8000/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: demo-key" \
+  -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"Summarize model serving best practices."}],"max_new_tokens":256}'
+```
+
+You can also open the generated FastAPI docs at:
+
+```text
+http://127.0.0.1:8000/docs
 ```
 
 ### Chapter 4 Section Map
@@ -273,6 +396,73 @@ $ python3 -B ch6_vllm_optimization_techniques_hw.py --section attention
 }
 ```
 
+## Chapter 8: LLM Serving Frameworks
+
+Run local framework and vLLM Scheduler homework sections:
+
+```bash
+python3 -B ch8_llm_serving_frameworks_hw.py --section commands
+python3 -B ch8_llm_serving_frameworks_hw.py --section architecture
+python3 -B ch8_llm_serving_frameworks_hw.py --section init
+python3 -B ch8_llm_serving_frameworks_hw.py --section workflow
+python3 -B ch8_llm_serving_frameworks_hw.py --section scheduler
+python3 -B ch8_llm_serving_frameworks_hw.py --section compare-schedulers
+python3 -B ch8_llm_serving_frameworks_hw.py --section frameworks
+python3 -B ch8_llm_serving_frameworks_hw.py --section evaluate --structured-outputs
+python3 -B ch8_llm_serving_frameworks_hw.py --section all
+```
+
+### Chapter 8 Section Map
+
+| Section | Chapter concept | Requires | Expected output shape |
+| --- | --- | --- | --- |
+| `commands` | vLLM LLM class and OpenAI-compatible API server | Base Python | Copyable vLLM library code, `vllm serve`, and `curl` examples |
+| `architecture` | vLLM components: LLMEngine, EngineCore, Scheduler, ModelExecutor, GPUWorker, ModelRunner | Base Python | JSON component map and optimization-layer responsibilities |
+| `init` | Multi-process worker initialization workflow | Base Python | Constructor config, setup events, and worker process metadata |
+| `workflow` | Generation request lifecycle and `SchedulerOutput` | Base Python | Processor-to-output workflow with sample scheduled tokens |
+| `scheduler` | vLLM WAITING/RUNNING queues and token-level scheduling | Base Python | Synthetic requests, scheduler summary, and first scheduler outputs |
+| `compare-schedulers` | Request-level batching vs token-level vLLM-style scheduling | Base Python | TPS, TTFT, E2E, token budget, prefix-cache, and preemption metrics |
+| `frameworks` | vLLM, TensorRT-LLM, SGLang, and llama.cpp decision matrix | Base Python | Best-fit, strengths, and cost-profile rows |
+| `evaluate` | Framework selection by SLOs, hardware, and workload shape | Base Python | Ranked framework recommendations |
+| `all` | Run all local Chapter 8 examples | Base Python | All section outputs in sequence |
+
+### Chapter 8 vLLM Scheduler Homework
+
+| Experiment | Corresponding Chapter 8 concept |
+| --- | --- |
+| Inspect `WAITING` and `RUNNING` queues | Request lifecycle management |
+| Change `max_num_seqs` | Active sequence admission and fairness |
+| Change `max_num_batched_tokens` | Token-level scheduling and token budget |
+| Change `long_prefill_token_threshold` | Chunked prefill |
+| Enable / disable prefix cache | KV-prefix reuse |
+| Use `priority` vs `fcfs` policy | Request prioritization |
+| Use `recompute`, `swap`, or `none` preemption | Resource pressure and preemption behavior |
+
+Sample output:
+
+```json
+$ python3 -B ch8_llm_serving_frameworks_hw.py --section scheduler
+{
+  "config": {
+    "max_num_seqs": 3,
+    "max_num_batched_tokens": 384,
+    "long_prefill_token_threshold": 128
+  },
+  "summary": {
+    "completed": 10,
+    "mean_ttft_ms": 393.0952,
+    "prefix_cache_hit_rate": 0.5,
+    "preemptions": 2
+  },
+  "first_scheduler_outputs": [
+    {
+      "scheduled_tokens": {"req-1": 128},
+      "phase": {"req-1": "prefill"}
+    }
+  ]
+}
+```
+
 ## Chapter 9: Optimization in Practice
 
 Run local optimization lab sections:
@@ -337,7 +527,8 @@ $ python3 -B ch9_llm_optimization_practice_hw.py --section quantization
 2. Chapter 3 `basic`, `batch`, `stream`, and `multimodel`.
 3. Chapter 4 `agent`, `rag`, `cag`, `routing`, and `metrics --burst`.
 4. Chapter 6 `commands`, `batching`, `attention`, `quantization`, and `prefix-cache`.
-5. Chapter 9 `dataset`, `benchmark`, `quantization`, `tuning`, and `distributed`.
+5. Chapter 8 `architecture`, `workflow`, `scheduler`, `compare-schedulers`, and `frameworks`.
+6. Chapter 9 `dataset`, `benchmark`, `quantization`, `tuning`, and `distributed`.
 
 ## Troubleshooting
 

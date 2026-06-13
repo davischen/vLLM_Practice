@@ -6,7 +6,18 @@ practices: agents, RAG/CAG, routing, enterprise controls, metrics, and
 build-versus-cloud choices.
 
 All results here use local deterministic mocks, so they run without ML
-dependencies.
+dependencies. The `--serve` result uses FastAPI and Uvicorn.
+
+## Performance and Cost Summary
+
+| Scenario | Key result | Performance or cost lesson |
+| --- | --- | --- |
+| RAG | Retrieval time: 0.0000505s, context: 589 chars | Request-time retrieval adds lookup work but keeps prompt context focused. |
+| CAG | Retrieval time: 0.0000005s, context: 1,194 chars | Cached context can reduce retrieval latency, but may increase prompt-token cost. |
+| Routing | Short request uses passthrough; long request uses speculative decode | Route by request shape so expensive strategies are used only when useful. |
+| Normal metrics | RPS 1.3139, TPS 120.4858, p95 E2E 18.3454s, p95 TTFT 17.5272s | Track throughput and latency together; one number is not enough. |
+| Burst metrics | RPS 1.3563, TPS 121.7617, p95 E2E 21.6412s, p95 TTFT 21.2691s | Similar throughput can still hide worse tail latency under bursty traffic. |
+| Build vs cloud | Managed API, hybrid, and self-hosting are compared qualitatively | Cloud lowers ops cost; self-hosting raises control and infrastructure responsibility. |
 
 ## Result 1: Knowledge Agent
 
@@ -20,14 +31,32 @@ Key output:
 
 ```json
 {
-  "plan": ["query_rag_with_context", "generate_analysis", "generate_summary"],
-  "reasoning": "Retrieve grounding context first, then synthesize the answer.",
+  "query": "Create a detailed comparison between database query optimization and data structure optimization.",
+  "plan": {
+    "plan": [
+      "query_rag_with_context",
+      "generate_analysis",
+      "generate_summary"
+    ],
+    "reasoning": "Retrieve grounding context first, then synthesize the answer.",
+    "estimated_steps": 3
+  },
   "observations": [
-    {"action": "query_rag_with_context", "output": "Document 1 ..."},
-    {"action": "generate_analysis", "output": "Analysis: ..."},
-    {"action": "generate_summary", "output": "Summary: ..."}
+    {
+      "action": "query_rag_with_context",
+      "output": "Document 1 (source=database_queries.txt, score=0.338): database query optimization improves how relational systems execute sql ..."
+    },
+    {
+      "action": "generate_analysis",
+      "output": "Analysis: The retrieved context shows a trade-off between precision, latency, and system complexity. Query optimization and data-structure optimization both reduce wasted work, but operate at different layers."
+    },
+    {
+      "action": "generate_summary",
+      "output": "Summary: Ground the answer in retrieved or cached knowledge, then keep the final response concise and operationally useful."
+    }
   ],
-  "final_answer": "Summary: Ground the answer in retrieved or cached knowledge..."
+  "final_answer": "Summary: Ground the answer in retrieved or cached knowledge, then keep the final response concise and operationally useful.",
+  "elapsed_seconds": 4.3e-05
 }
 ```
 
@@ -55,10 +84,10 @@ Key output:
 ```json
 {
   "mode": "RAG",
-  "retrieval_seconds": 0.000049,
+  "retrieval_seconds": 5.054101347923279e-05,
   "context_chars": 589,
-  "response": "Summary: Ground the answer in retrieved or cached knowledge...",
-  "context": "Document 1 (source=database_queries.txt, score=0.374): ..."
+  "response": "Summary: Ground the answer in retrieved or cached knowledge, then keep the final response concise and operationally useful.",
+  "context": "Document 1 (source=database_queries.txt, score=0.374): database query optimization improves how relational systems execute sql common query types include selection projection joins aggregation and subqueries optimizers compare candidate plans estimate costs\nDocument 2 (source=llm_serving.txt, score=0.276): single user request can trigger many model calls and tool calls\nDocument 3 (source=llm_serving.txt, score=0.194): kv cache reuse observability rate limits tenant isolation and cost control agentic workloads amplify latency because a single user request can trigger many model calls"
 }
 ```
 
@@ -86,9 +115,9 @@ Key output:
 ```json
 {
   "mode": "CAG",
-  "retrieval_seconds": 0.00000058,
+  "retrieval_seconds": 5.00120222568512e-07,
   "context_chars": 1194,
-  "response": "Summary: Ground the answer in retrieved or cached knowledge..."
+  "response": "Summary: Ground the answer in retrieved or cached knowledge, then keep the final response concise and operationally useful."
 }
 ```
 
@@ -119,8 +148,8 @@ Key output:
   "enterprise_override": "https://enterprise.example/v1/gpt-4o-mini",
   "short_strategy": "passthrough",
   "long_strategy": "speculative_decode",
-  "hpa_yaml": "apiVersion: autoscaling/v2...",
-  "nginx_rate_limit_yaml": "apiVersion: networking.k8s.io/v1..."
+  "hpa_yaml": "apiVersion: autoscaling/v2\nkind: HorizontalPodAutoscaler\nmetadata: { name: enterprise-model-api-hpa }\nspec:\n  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: enterprise-model-api }\n  minReplicas: 3\n  maxReplicas: 15\n  metrics:\n  - type: Resource\n    resource: { name: cpu, target: { type: Utilization, averageUtilization: 70 } }",
+  "nginx_rate_limit_yaml": "apiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: api-ingress\n  annotations:\n    kubernetes.io/ingress.class: nginx\n    nginx.ingress.kubernetes.io/limit-rps: \"50\"\n    nginx.ingress.kubernetes.io/limit-burst-multiplier: \"5\"\n    nginx.ingress.kubernetes.io/proxy-body-size: \"8m\"\nspec:\n  rules:\n  - host: api.yourorg.example\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend: { service: { name: enterprise-model-api, port: { number: 80 } } }"
 }
 ```
 
@@ -177,15 +206,28 @@ Key output:
 
 ```json
 {
-  "requests": 40.0,
-  "rps": 1.3139,
-  "rpm": 78.8348,
-  "tps": 120.4858,
-  "p50_e2e": 9.5566,
-  "p95_e2e": 18.3454,
-  "p50_ttft": 8.6802,
-  "p95_ttft": 17.5272,
-  "p50_tpot": 0.00816
+  "burst": false,
+  "summary": {
+    "requests": 40.0,
+    "duration_seconds": 30.443416017998324,
+    "rps": 1.313912997685666,
+    "rpm": 78.83477986113996,
+    "tps": 120.48582188777557,
+    "p50_e2e": 9.556604958348334,
+    "p95_e2e": 18.345443578943538,
+    "p50_ttft": 8.68020497194732,
+    "p95_ttft": 17.527188562761204,
+    "p50_tpot": 0.008162743542128568
+  },
+  "example_traces": [
+    {
+      "request_id": "req-0",
+      "e2e_latency": 0.5543,
+      "ttft": 0.0639,
+      "tpot": 0.0086,
+      "output_tokens": 58
+    }
+  ]
 }
 ```
 
@@ -200,7 +242,46 @@ This result separates user-perceived latency (`e2e`, `ttft`) from decode speed
 (`tpot`) and service throughput (`rps`, `rpm`, `tps`). Those metrics answer
 different operational questions.
 
-## Result 7: Build-versus-cloud Decision
+## Result 7: Metrics With Bursty Traffic
+
+Command:
+
+```bash
+python3 -B ch4_model_serving_best_practices_hw.py --section metrics --burst
+```
+
+Key output:
+
+```json
+{
+  "burst": true,
+  "summary": {
+    "requests": 40.0,
+    "duration_seconds": 29.492022678475422,
+    "rps": 1.3562989706092206,
+    "rpm": 81.37793823655323,
+    "tps": 121.76174008644277,
+    "p50_e2e": 12.554364912429214,
+    "p95_e2e": 21.641169875123403,
+    "p50_ttft": 11.677964926028201,
+    "p95_ttft": 21.269148825659446,
+    "p50_tpot": 0.007672491287140893
+  }
+}
+```
+
+Chapter concept:
+
+Bursty arrivals increase queueing pressure. Even if throughput remains similar,
+latency percentiles can get worse.
+
+Explanation:
+
+Compared with Result 6, bursty traffic raises p50 E2E latency from about
+`9.56s` to `12.55s` and p95 E2E latency from about `18.35s` to `21.64s`.
+This demonstrates why average throughput alone is not enough for serving SLOs.
+
+## Result 8: Build-versus-cloud Decision
 
 Command:
 
@@ -213,13 +294,16 @@ Key output:
 ```json
 {
   "prototype": {
-    "recommendation": "Option 1: fully managed foundation-model API"
+    "recommendation": "Option 1: fully managed foundation-model API",
+    "reason": "Lowest operational overhead; good for quick prototypes and stable low-volume apps."
   },
   "custom_agent_platform": {
-    "recommendation": "Option 5 or 6: bring your own image or serving stack"
+    "recommendation": "Option 5 or 6: bring your own image or serving stack",
+    "reason": "You need control over batching, routing, kernels, autoscaling, telemetry, or portability."
   },
   "managed_with_custom_handler": {
-    "recommendation": "Option 4: bring your own code in a managed container"
+    "recommendation": "Option 4: bring your own code in a managed container",
+    "reason": "Custom request handling matters, but the vendor runtime is still acceptable."
   }
 }
 ```
@@ -233,3 +317,54 @@ Explanation:
 
 There is no universal best deployment style. The result frames the decision as a
 trade-off between managed simplicity and custom control.
+
+## Result 9: FastAPI Enterprise API Root Endpoint
+
+Command:
+
+```bash
+python3 -B ch4_model_serving_best_practices_hw.py --serve --port 8000
+```
+
+Server output:
+
+```text
+INFO:     Started server process [99761]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:49368 - "GET / HTTP/1.1" 200 OK
+```
+
+Browser or `curl http://127.0.0.1:8000/` result:
+
+```json
+{
+  "name": "Chapter 4 enterprise model API homework",
+  "status": "ok",
+  "endpoints": {
+    "health": "GET /health",
+    "docs": "GET /docs",
+    "chat_completions": "POST /v1/chat/completions"
+  },
+  "auth": {
+    "api_key_header": "x-api-key",
+    "demo_api_key": "demo-key",
+    "bearer_header": "Authorization: Bearer demo-token"
+  }
+}
+```
+
+Chapter concept:
+
+Production APIs should expose discoverable health and documentation endpoints.
+The model endpoint itself still requires authentication and a structured request
+body.
+
+Explanation:
+
+The first server run returned `404 Not Found` for `GET /` because only `/health`
+and `/v1/chat/completions` were defined. After adding the root endpoint, `GET /`
+returns a small API index with available routes and demo authentication headers.
+Use `/docs` for the generated FastAPI UI, `/health` for health checks, and
+`POST /v1/chat/completions` for the enterprise chat demo.
