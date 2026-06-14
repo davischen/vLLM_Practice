@@ -1,0 +1,24 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: vllm-demo
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - host.docker.internal:9108
+        labels:
+          app: vllm-practice
+          component: vllm-serving
+          source: demo
+
+  - job_name: vllm-serve
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - host.docker.internal:8000
+        labels:
+          app: vllm-practice
+          component: vllm-serving
+          source: real-vllm

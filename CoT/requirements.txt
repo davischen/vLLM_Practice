@@ -1,0 +1,13 @@
+fire>=0.7.0
+lightning>=2.5.0
+torch>=2.4.1
+transformers>=4.50.0
+numpy>=2.2.1
+Pillow>=11.1.0
+tqdm>=4.66.0
+accelerate>=0.26.0
+tensorboard>=2.15.0
+peft>=0.15.0
+
+# Optional for homework.vllm_cot local inference/data generation on Linux/CUDA.
+# vllm>=0.6.0

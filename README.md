@@ -92,6 +92,12 @@ Base Python is enough for the mock/local sections. Install optional packages onl
 when you want to run the real model or web-service variants.
 
 ```bash
+pip install -r requirements.txt
+```
+
+Or install only the groups you need:
+
+```bash
 pip install fastapi uvicorn
 pip install torch transformers accelerate matplotlib
 pip install bertviz
@@ -104,6 +110,58 @@ Notes:
 - `torch`, `transformers`, and model downloads are needed for real Hugging Face model sections.
 - `vllm` generally expects a Linux/CUDA environment.
 - Chapter 9 can generate real `vllm serve` and `vllm bench serve` commands, but its default benchmark is synthetic and local.
+
+## Observability: Prometheus, Grafana, and Loki
+
+The repository includes a local observability stack for vLLM serving:
+
+- Prometheus scrapes vLLM serving metrics such as request rate, prompt/generation
+  token throughput, scheduler load, KV-cache usage, TTFT, and E2E latency.
+- Grafana provisions a `vLLM Serving Observability` dashboard with Prometheus
+  trend panels and a Loki log viewer.
+- Loki stores vLLM server logs. Promtail reads `logs/vllm/*.log` and ships those
+  log lines into Loki.
+
+For a real vLLM server, run `vllm serve` and write stdout/stderr into the log
+folder that Promtail watches:
+
+```bash
+mkdir -p logs/vllm
+vllm serve Qwen/Qwen3-14B --host 0.0.0.0 --port 8000 2>&1 | tee logs/vllm/vllm.log
+```
+
+Prometheus is configured to scrape the real vLLM server at
+`host.docker.internal:8000/metrics`.
+
+If you do not have GPU/vLLM available, use the local mock vLLM-compatible demo
+from the repository root:
+
+```bash
+python3 -B vllm_observability_demo.py
+```
+
+The mock demo listens on `http://localhost:9108`, exposes `/metrics`, implements
+a tiny `/v1/chat/completions` endpoint, and writes structured request logs to
+`logs/vllm/vllm-demo.log`.
+
+In a second terminal, start the observability stack:
+
+```bash
+docker compose -f observability/docker-compose.yml up
+```
+
+Then open:
+
+| Tool | URL | Purpose |
+| --- | --- | --- |
+| Grafana | <http://localhost:3000> | Dashboard and Loki log viewer. Login: `admin` / `admin`. |
+| Prometheus | <http://localhost:9090> | Raw metric queries and scrape target health. |
+| Loki | <http://localhost:3100/ready> | Loki readiness endpoint. |
+
+Prometheus also scrapes the mock demo at `host.docker.internal:9108/metrics`.
+In Grafana, open **vLLM Practice / vLLM Serving Observability**. Use the
+Prometheus panels for serving trends, and the `vLLM Request Logs` panel for the
+server log timeline.
 
 ## Environment Variables
 

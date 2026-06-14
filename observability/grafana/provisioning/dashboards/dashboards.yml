@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: vllm-practice
+    orgId: 1
+    folder: vLLM Practice
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

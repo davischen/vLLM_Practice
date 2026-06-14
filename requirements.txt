@@ -1,0 +1,24 @@
+# Base requirements for the local mock labs and vLLM observability demo.
+# The core examples intentionally rely on the Python standard library where possible.
+
+# Web serving demos in Chapters 3 and 4.
+fastapi>=0.115.0
+uvicorn>=0.30.0
+httpx>=0.27.0
+requests>=2.32.0
+
+# Numeric and plotting helpers for optional notebook/lab sections.
+numpy>=1.26.0
+matplotlib>=3.9.0
+
+# Optional real-model sections. These can be heavy on CPU-only machines.
+# torch>=2.4.0
+# transformers>=4.44.0
+# accelerate>=0.34.0
+
+# Optional attention visualization.
+# bertviz>=1.4.0
+
+# Optional GPU/vLLM sections. vLLM usually expects Linux/CUDA.
+# vllm>=0.6.0
+# tritonclient[http]>=2.49.0
